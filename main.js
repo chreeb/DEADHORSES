@@ -48,7 +48,7 @@ controls.update();
 
 addLighting();
 
-const boidGeo = new THREE.BoxBufferGeometry(0.2,0.2,0.2);
+const boidGeo = new THREE.SphereBufferGeometry(0.1, 32, 32);
 const boidMat = new THREE.MeshStandardMaterial(0xFFFFFF);
 
 let nullVector = new THREE.Vector3(0,0,0);
@@ -60,9 +60,13 @@ class Boid {
     constructor() {
         this.self = new THREE.Mesh(boidGeo,boidMat);
         this.self.position.x = returnReducedRand(3);
-        let magStr = 1;
-        this.magnitude = new THREE.Vector3(returnRand(magStr),returnRand(magStr),returnRand(magStr));
+        this.self.position.y = returnReducedRand(3);
+        this.self.position.z = returnReducedRand(3);
+        let magStr = 0.0001;
+        this.magnitude = new THREE.Vector3(minRandom(magStr),minRandom(magStr),minRandom(magStr));
         scene.add(this.self);
+
+        this.isCenterPull = false;
     }
 
     checkLimits() {
@@ -73,39 +77,53 @@ class Boid {
         }
     }
 
-    update(boidArr) {
-        let moveAwayVector = new THREE.Vector3(0,0,0);
+    returnGravityVector(boidArr,distance) {
+        let gravityVector = new THREE.Vector3(0,0,0);
         let numNeighbors = 0;
 
         boidArr.forEach((other) => {
             if (other == this) { return; }
 
-            let distance = this.self.position.distanceToSquared(other.self.position);
-            if (distance < 0.3) {
+            let dist = this.self.position.distanceToSquared(other.self.position);
+            if (dist < distance) {
                 let otherPos = other.self.position;
-                moveAwayVector.add(otherPos);
+                gravityVector.add(otherPos);
                 numNeighbors++;
             }
         });
 
         if (numNeighbors != 0) {
-            moveAwayVector.divideScalar(numNeighbors);
-            return moveAwayVector
+            gravityVector.divideScalar(numNeighbors);
+            return gravityVector
         } else {
             return false;
         }
     }
 
     move(boidArr) {
-        let moveAwayVec = this.update(boidArr);
-        if (moveAwayVec) {
-            moveAwayVec.subVectors(moveAwayVec,this.self.position);
-            moveAwayVec.divideScalar(800);
-            this.magnitude.sub(moveAwayVec);
-        }
-
         this.magnitude.normalize();
         this.magnitude.divideScalar(100);
+        
+        let moveAwayVec = this.returnGravityVector(boidArr,0.3);
+        if (moveAwayVec) {
+            moveAwayVec.subVectors(moveAwayVec,this.self.position);
+            moveAwayVec.divideScalar(500);
+            this.magnitude.sub(moveAwayVec);
+        }
+        
+        let moveTowardsVec = this.returnGravityVector(boidArr,0.7);
+        if (moveTowardsVec) {
+            moveTowardsVec.subVectors(moveTowardsVec,this.self.position);
+            moveTowardsVec.divideScalar(1000);
+            this.magnitude.add(moveTowardsVec);
+        }
+
+        if (this.isCenterPull) {
+            let centerVector = new THREE.Vector3(0,0,0);
+            centerVector.subVectors(centerVector,this.self.position);
+            centerVector.divideScalar(1000);
+            this.magnitude.add(centerVector);
+        }
 
         this.self.position.add(this.magnitude);
         this.checkLimits();
@@ -146,6 +164,10 @@ function returnRand(mod) {
 
 function returnReducedRand(mod) {
     return ((Math.random()*mod) - (mod/2))/mod;
+}
+
+function minRandom(mod) {
+    return Math.random(mod) - (mod/2);
 }
 
 function distanceVector( v1, v2 )
