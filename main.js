@@ -46,9 +46,34 @@ const controls = new OrbitControls(camera,renderer.domElement);
 controls.target.set(0,0,0);
 controls.update();
 
+import {GLTFLoader} from 'https://unpkg.com/three/examples/jsm/loaders/GLTFLoader.js';
+let empty = new THREE.Object3D();
+scene.add(empty);
+const loader = new GLTFLoader();
+
+loader.load( 'fly.gltf', function ( gltf ) {
+const postbox = gltf.scene.children[0];
+postbox.scale.set(0.2,0.2,0.2);
+postbox.position.set(0,-0.2,0);
+postbox.rotation.x = 1;
+empty.add(gltf.scene);
+});
+
+/*
+const loader = new GLTFLoader();
+  loader.load( 'fly.gltf', function ( gltf ) {
+  const postbox = gltf.scene.children[0];
+  postbox.scale.set(0.2,0.2,0.2);
+  postbox.position.set(0,-0.2,0);
+  postbox.rotation.x = 1;
+  empty.add(gltf.scene);
+});
+*/
+
 addLighting();
 
-const boidGeo = new THREE.SphereBufferGeometry(0.1, 32, 32);
+//const boidGeo = new THREE.SphereBufferGeometry(0.1, 32, 32);
+const boidGeo = new THREE.BoxBufferGeometry(0.2,0.2,0.2);
 const boidMat = new THREE.MeshStandardMaterial(0xFFFFFF);
 
 let nullVector = new THREE.Vector3(0,0,0);
@@ -126,6 +151,9 @@ class Boid {
         }
 
         this.self.position.add(this.magnitude);
+        
+        let vec = new THREE.Vector3(0,0,0);
+
         this.checkLimits();
     }
 }
@@ -133,9 +161,6 @@ class Boid {
 for (let i = 0; i < 30; i++) {
     boidArr.push(new Boid());
 }
-
-
-
 
 
 animate();

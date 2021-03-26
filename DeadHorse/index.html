@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html>
+  <head charset="utf-8">
+  <title>Three.js Test</title>
+  <style>
+    body {margin:0;}
+  </style>
+  </head>
+
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
+    
+    
+    <script type="module">
+    let camera, scene, renderer;
+
+    function init() {
+
+      camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 100000 );
+      camera.position.z = 1;
+
+      scene = new THREE.Scene();
+      
+      const hlight = new THREE.AmbientLight(0xFFFFFF,0.5);
+      scene.add(hlight);
+      
+      renderer = new THREE.WebGLRenderer( { antialias: true } );
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.setAnimationLoop( animation );
+      document.body.appendChild( renderer.domElement );
+      
+      
+      const directionalLight = new THREE.DirectionalLight(new THREE.Color('#89bed2'),0.7);
+      directionalLight.position.set(0,1,0);
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+      
+      
+      
+      renderer.setClearColor(new THREE.Color('#22353C'));
+    }
+
+    init();
+
+    import {OrbitControls} from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js';
+    const controls = new OrbitControls(camera,renderer.domElement);
+    controls.target.set(0,0,0);
+    controls.update();
+
+    function loadModel(name) {
+      let _empty = new THREE.Object3D();
+      scene.add(_empty);
+
+      const loader = new THREE.GLTFLoader();
+      loader.load( name, function ( gltf ) {
+        _empty.add(gltf.scene);
+        _empty.scale.set(0.05,0.05,0.05);
+      });
+
+      return _empty;
+    }
+
+    let fly1 = loadModel('fly_lowpoly.gltf');
+    let fly2 = loadModel('fly_lowpoly.gltf');
+
+    fly1.position.x = 0.2;
+    fly2.position.x = -0.2;
+
+    fly2.lookAt(fly1.position);
+    fly1.lookAt(fly2.position);
+
+
+    function animation( time ) {
+      renderer.render( scene, camera );
+    }
+    
+    animation();
+
+
+    //empty.lookAt(new THREE.Vector3(0.5,0.3,0));
+  </script>
+
+
+  </body>
+</html>
