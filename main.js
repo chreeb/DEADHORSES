@@ -1,5 +1,7 @@
 let scene, camera, renderer, cube;
 
+// This is an edit
+
 function init() {
     scene = new THREE.Scene();
 
